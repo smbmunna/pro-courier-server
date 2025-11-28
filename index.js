@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
@@ -35,15 +36,29 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         //api endpoints
-
+        //post parcels
         app.post('/parcels', async (req, res) => {
             try {
                 const newParcel = req.body;
                 newParcel.createdAt = new Date();
                 const result = await collection.insertOne(newParcel);
                 res.status(201).send(result);
-            }catch(error){
-                res.status(400).send(error.message); 
+            } catch (error) {
+                res.status(400).send(error.message);
+            }
+        })
+
+        //get parcels
+        app.get('/getParcels', async (req, res) => {
+            try {
+                const email = req.query.email;
+                const query= email ? { createdBy: email } : {}
+                const parcels = await collection.find(query).sort({ createdAt: -1 }).toArray();
+                res.send(parcels);
+            }
+            catch (error) {
+                console.error('Error fetching parcels: ', error.message)
+                res.status(500).send({message: "Failed to get parcels"})
             }
         })
 
