@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 
@@ -52,13 +52,27 @@ async function run() {
         app.get('/getParcels', async (req, res) => {
             try {
                 const email = req.query.email;
-                const query= email ? { createdBy: email } : {}
+                const query = email ? { createdBy: email } : {}
                 const parcels = await collection.find(query).sort({ createdAt: -1 }).toArray();
                 res.send(parcels);
             }
             catch (error) {
                 console.error('Error fetching parcels: ', error.message)
-                res.status(500).send({message: "Failed to get parcels"})
+                res.status(500).send({ message: "Failed to get parcels" })
+            }
+        })
+
+        //delete parcel
+        app.delete('/parcel/:id', async (req, res) => {
+            try {
+                const result = await collection.deleteOne({ _id: new ObjectId(req.params.id) });
+                if (result.deletedCount === 0) {
+                    return res.status(404).send({ success: false, error: "Parcel not found" })
+                }
+                res.send('Successfully deleted parcel id:', req.params.id);
+            }
+            catch (error) {
+                res.status(500).send({ message: "Failed to delete parcel" })
             }
         })
 
